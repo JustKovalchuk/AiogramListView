@@ -2,33 +2,29 @@ import asyncio
 import logging
 import sys
 
-from os import getenv
-from dotenv import load_dotenv
-
-from aiogram import Bot, Dispatcher, html
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
+from aiogram import Dispatcher, html
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 
-from listview import ListView
+from aiogram_listview.listview import ListView
+from aiogram_listview.listview_aiogram import print_list, router
+from aiogram_listview.listview_controller import get_storage
 
-load_dotenv()
-TOKEN = getenv("BOT_TOKEN")
+from bot_utils import bot
 
 dp = Dispatcher()
-
-# @dp.callback_query()
-# async def callback_handler(query: CallbackQuery) -> None:
-#     await query.answer(
-#
-# )
+dp.include_router(router)
 
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
+    storage = get_storage()
+
     data = [1,2,3,4,5,6,7,8,9,10,11,12]
+    lv = ListView(data, id="test", page_size=5, is_show_page=False, is_show_content_instead_of_indexes=True)
+    lv.my_init()
     await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!")
+    await print_list(message.from_user.id, lv, storage, False, bot)
 
 
 @dp.message()
@@ -40,7 +36,6 @@ async def echo_handler(message: Message) -> None:
 
 
 async def main() -> None:
-    bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     await dp.start_polling(bot)
 
 

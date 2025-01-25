@@ -1,10 +1,8 @@
-from listview import ListView
-
 class ListViewStorage:
     active_listviews = dict()
     active_listview_messages = dict()
 
-    def save_listview(self, tg_id, lv: ListView):
+    def save_listview(self, tg_id, lv):
         self.active_listviews.update({tg_id: lv})
 
     def save_listview_message(self, tg_id, message_id: int):
