@@ -1,13 +1,6 @@
 import math
-from enum import Enum
 from typing import List, Any, Optional, Callable
-
-
-class ListType(Enum):
-    TYPE1 = "TYPE1"
-    TYPE2 = "TYPE2"
-    TYPE3 = "TYPE3"
-
+from aiogram.types import InlineKeyboardButton
 
 class ListView:
     def __init__(
@@ -20,8 +13,8 @@ class ListView:
         end_text: str = "\nSelect one of the options below👇",
         empty_data_text: str = "No data found!",
         is_show_page: bool = True,
-        is_show_content_instead_of_indexes: bool = False,
-        formatter: Optional[Callable[[int, Any], str]] = None
+        formatter: Optional[Callable[[int, Any], str]] = None,
+        button_builder: Optional[Callable[[Any, int, str], InlineKeyboardButton]] = None
     ):
         self._id = id
         self._data = data_list
@@ -31,8 +24,20 @@ class ListView:
         self._end_text = end_text
         self._empty_data_text = empty_data_text
         self._is_show_page = is_show_page
-        self._is_show_content_instead_of_indexes = is_show_content_instead_of_indexes
         self._formatter = formatter
+        self._button_builder = button_builder
+
+    @property
+    def id(self) -> str: return self._id
+
+    @property
+    def data(self) -> List[Any]: return self._data
+
+    @property
+    def current_page(self) -> int: return self._current_page
+
+    @property
+    def button_builder(self) -> Optional[Callable]: return self._button_builder
 
     def get_max_page(self) -> int:
         if not self._data:
@@ -54,13 +59,13 @@ class ListView:
 
         return self._data[start_index:end_index], start_index, end_index
 
-    def next(self):
+    def next(self) -> tuple:
         max_page = self.get_max_page()
         if max_page > 1:
             self._current_page = self._current_page % max_page + 1
         return self.slice_data()
 
-    def previous(self):
+    def previous(self) -> tuple:
         max_page = self.get_max_page()
         if max_page > 1:
             self._current_page = self._current_page - 1
@@ -69,17 +74,14 @@ class ListView:
         return self.slice_data()
 
     def get_display_text(self) -> str:
-        data_per_page, start_index, end_index = self.slice_data()
+        data_per_page, start_index, _ = self.slice_data()
         if not data_per_page:
             return self._empty_data_text
 
         text = self._start_text
         for i, value in enumerate(data_per_page):
             idx = start_index + i + 1
-            if self._formatter:
-                line = self._formatter(idx, value)
-            else:
-                line = f'{idx}. {value}'
+            line = self._formatter(idx, value) if self._formatter else f'{idx}. {value}'
             text += f'{line}\n'
         
         text += self._end_text
