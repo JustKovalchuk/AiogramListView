@@ -7,12 +7,10 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery
 
 from aiogram_listview.listview import ListView
-from aiogram_listview.listview_aiogram import print_list, router, register_selection_handler
+from aiogram_listview.listview_aiogram import print_list, router
 
 from aiogram_listview.listview_storage import MemoryListViewStorage
 from aiogram_listview.listview_middleware import ListViewMiddleware
-
-from bot_utils import bot
 
 dp = Dispatcher()
 
@@ -47,8 +45,6 @@ async def command_start_handler(
         start_text="🍎 Choose your favorite fruit:\n\n",
         formatter=item_formatter
     )
-    
-    register_selection_handler("fruit_list", handle_item_selection)
     
     await message.answer(f"Hello, {html.bold(message.from_user.full_name)}! Here is your list:")
     
