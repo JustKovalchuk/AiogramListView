@@ -4,10 +4,10 @@ import sys
 
 from aiogram import Dispatcher, html
 from aiogram.filters import CommandStart
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 
 from aiogram_listview.listview import ListView
-from aiogram_listview.listview_aiogram import print_list, router
+from aiogram_listview.listview_aiogram import print_list, router, register_selection_handler
 from aiogram_listview.listview_controller import get_storage
 
 from bot_utils import bot
@@ -16,23 +16,38 @@ dp = Dispatcher()
 dp.include_router(router)
 
 
+async def handle_item_selection(callback: CallbackQuery, item: any, index: int):
+    await callback.answer(f"You picked {item}!")
+    await callback.message.answer(f"✨ Custom selection logic: Item {item} at index {index}")
+
+
+# Custom formatter for list items
+def item_formatter(idx, value):
+    return f"🔹 {html.bold(f'Item #{idx}')}: {value}"
+
+
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
     storage = get_storage()
 
-    data = [1,2,3,4,5,6,7,8,9,10,11,12]
-    lv = ListView(data, id="test", page_size=5, is_show_page=False, is_show_content_instead_of_indexes=True)
-    lv.my_init()
-    await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!")
-    await print_list(message.from_user.id, lv, storage, False, bot)
-
-
-@dp.message()
-async def echo_handler(message: Message) -> None:
-    try:
-        await message.send_copy(chat_id=message.chat.id)
-    except TypeError:
-        await message.answer("Nice try!")
+    data = ["Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig", "Grape", "Honeydew"]
+    
+    # Create ListView with custom id and settings
+    lv = ListView(
+        data, 
+        id="fruit_list", 
+        page_size=3, 
+        is_show_page=True, 
+        is_show_content_instead_of_indexes=True,
+        start_text="🍎 Choose your favorite fruit:\n\n",
+        formatter=item_formatter
+    )
+    
+    # Register custom behavior for this list
+    register_selection_handler("fruit_list", handle_item_selection)
+    
+    await message.answer(f"Hello, {html.bold(message.from_user.full_name)}! Here is your list:")
+    await print_list(message.chat.id, lv, storage, replacement=False, bot=bot)
 
 
 async def main() -> None:
